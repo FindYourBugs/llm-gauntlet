@@ -1,0 +1,45 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  # One-shot: pulls the model on first run, then exits (exit 0 = ready).
+  ollama-init:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:1b}
+    entrypoint: >
+      sh -c "
+        until ollama list >/dev/null 2>&1; do sleep 1; done;
+        ollama pull \"$$OLLAMA_MODEL\"
+      "
+
+  app:
+    build: ./app
+    ports:
+      - "5000:5000"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:1b}
+      - OLLAMA_TEMPERATURE=${OLLAMA_TEMPERATURE:-0.1}
+      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-300}
+      - FLAG_CH1=${FLAG_CH1:-staff_0verride_7f3a}
+      - FLAG_CH2=${FLAG_CH2:-555_0142_priya}
+      - FLAG_CH3=${FLAG_CH3:-excessive_agency_caught}
+      - FLAG_CH4=${FLAG_CH4:-supply_chain_pwned}
+      - FLAG_CH5=${FLAG_CH5:-mega90_vendor_code}
+      - FLAG_L5=${FLAG_L5:-shift_change_b71c9}
+      - FLAG_CH7=${FLAG_CH7:-confidently_wrong}
+      - FLAG_CH8=${FLAG_CH8:-sk_internal_4c9e1b}
+      - FLAG_CH9=${FLAG_CH9:-cross_tenant_leak_9f2}
+      - FLAG_CH10=${FLAG_CH10:-xss_exfil_confirmed}
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_data:

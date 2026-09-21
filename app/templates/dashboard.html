@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Agent Dashboard — TechNova Internal</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <a class="backlink" href="/level/10">&larr; Back to chat</a>
+  <h1>Agent Dashboard <small>internal.technova.example — chat transcript viewer</small></h1>
+
+  <div class="banner">
+    This page renders the chat transcript below as raw HTML — exactly the bug
+    Level 10 is about. It does not sanitize or escape anything Nova said.
+  </div>
+
+  {% if solved %}
+  <div class="flag-banner show">🚩 XSS callback received — flag: {{ flag }}</div>
+  {% endif %}
+
+  <div class="panel">
+    <h3>Transcript</h3>
+    {% for m in transcript %}
+      {% if m.role == 'user' %}
+      <div class="msg user">{{ m.content }}</div>
+      {% else %}
+      <div class="msg bot">{{ m.content | safe }}</div>
+      {% endif %}
+    {% else %}
+      <p style="color:#9aa0ac;">No messages yet — go chat with Nova first.</p>
+    {% endfor %}
+  </div>
+</body>
+</html>

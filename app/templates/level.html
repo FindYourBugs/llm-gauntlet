@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{% if is_bonus %}Bonus{% else %}Level {{ level.n }}{% endif %}: {{ cfg.title }} — The Gauntlet</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <a class="backlink" href="/">&larr; The Gauntlet</a>
+  <h1>{% if is_bonus %}Bonus Level{% else %}Level {{ level.n }} / {{ 10 }}{% endif %}: {{ cfg.title }}
+    <small>{{ cfg.owasp_id }} · {{ cfg.owasp_name }}</small>
+  </h1>
+
+  <div class="banner">{{ level.narrative }}</div>
+  <div class="objective"><strong>Objective:</strong> {{ cfg.objective }}</div>
+
+  <div id="chat"></div>
+  <div id="inputRow">
+    <input id="userInput" type="text" placeholder="Type a message..." autocomplete="off">
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <div id="flagBanner" class="flag-banner"></div>
+  <div id="nextLevelPanel" style="display:none; margin-top:1rem;">
+    <a id="nextLevelLink" href="#"><button>Next level →</button></a>
+  </div>
+
+  {% if level.challenge_id == 'ch3' %}
+  <div class="panel">
+    <h3>Refund action log (server-side, ground truth)</h3>
+    <table id="actionTable">
+      <thead><tr><th>Order</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if level.challenge_id == 'ch6' %}
+  <div class="panel">
+    <h3>Live stats</h3>
+    <p id="statsLine" style="color:#9aa0ac; font-size:0.9rem;">Loading...</p>
+    <p>Run <code>./scripts/unbounded_consumption_demo.sh http://localhost:5000 medium</code>
+       from the repo root and watch this update.</p>
+  </div>
+  {% endif %}
+
+  {% if level.challenge_id == 'ch7' %}
+  <div class="panel">
+    <h3>Caught a hallucination?</h3>
+    <p>There's no reliable way for the server to auto-detect a made-up fact.
+       Once Nova has confidently stated something specific and false as if
+       it were real TechNova policy, click below.</p>
+    <button id="attestBtn">I caught a hallucination</button>
+  </div>
+  {% endif %}
+
+  {% if level.challenge_id == 'ch10' %}
+  <div class="panel">
+    <h3>Agent Dashboard</h3>
+    <p>TechNova's support agents review chat transcripts here. It renders
+       Nova's replies as raw HTML — get a payload into a reply, then open the
+       dashboard and see what happens.</p>
+    <p><a href="/dashboard" target="_blank">Open Agent Dashboard →</a></p>
+    <p id="ch10Status" style="color:#9aa0ac; font-size:0.85rem;">Waiting for a callback to /api/collect...</p>
+  </div>
+  {% endif %}
+
+  <script>
+    const levelN = {{ level.n | default('null') }};
+    const isBonus = {{ 'true' if is_bonus else 'false' }};
+    const challengeId = {{ level.challenge_id | tojson }};
+    const chatEl = document.getElementById('chat');
+    const inputEl = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const flagBanner = document.getElementById('flagBanner');
+    let history = [];
+
+    function addMessage(role, text) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+      div.textContent = text;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function showFlag(flag) {
+      flagBanner.textContent = '🚩 Level complete! Flag: ' + flag;
+      flagBanner.classList.add('show');
+    }
+
+    function showNext(nextLevel) {
+      if (!nextLevel) return;
+      const panel = document.getElementById('nextLevelPanel');
+      const link = document.getElementById('nextLevelLink');
+      link.href = '/level/' + nextLevel;
+      panel.style.display = 'block';
+    }
+
+    function checkForFlag(text) {
+      const m = text && text.match(/LAB\{[^}]+\}/);
+      if (m) showFlag(m[0]);
+    }
+
+    async function send() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      addMessage('user', text);
+      history.push({ role: 'user', content: text });
+      inputEl.value = '';
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ level: levelN, bonus: isBonus, history })
+        });
+        const data = await res.json();
+        const reply = data.reply || data.error || '(no response)';
+        addMessage('bot', reply);
+        if (data.reply) history.push({ role: 'assistant', content: reply });
+        checkForFlag(reply);
+        if (data.flag) showFlag(data.flag);
+        if (data.violation) addMessage('bot', '⚠️ ' + data.violation);
+        if (data.level_complete) showNext(data.next_level);
+        if (challengeId === 'ch3') refreshActionLog();
+      } catch (e) {
+        addMessage('bot', 'Error contacting server: ' + e);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    sendBtn.addEventListener('click', send);
+    inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+
+    async function refreshActionLog() {
+      const res = await fetch('/api/action-log');
+      const rows = await res.json();
+      const tbody = document.querySelector('#actionTable tbody');
+      tbody.innerHTML = '';
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.order_id}</td><td>$${r.amount}</td>` +
+          `<td class="${r.unauthorized ? 'unauthorized' : ''}">${r.unauthorized ? 'UNAUTHORIZED' : 'within policy'}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    if (challengeId === 'ch3') refreshActionLog();
+
+    if (challengeId === 'ch6') {
+      const statsLine = document.getElementById('statsLine');
+      async function refreshStats() {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        statsLine.textContent = `Total requests: ${data.total_requests}  |  Avg latency: ${data.avg_latency_seconds}s`;
+      }
+      refreshStats();
+      setInterval(refreshStats, 3000);
+    }
+
+    if (challengeId === 'ch7') {
+      document.getElementById('attestBtn').addEventListener('click', async () => {
+        const res = await fetch('/api/self-attest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ level: levelN })
+        });
+        const data = await res.json();
+        if (data.flag) showFlag(data.flag);
+        if (data.level_complete) showNext(data.next_level);
+      });
+    }
+
+    if (challengeId === 'ch10') {
+      const statusEl = document.getElementById('ch10Status');
+      const poll = setInterval(async () => {
+        const res = await fetch('/api/ch10-status');
+        const data = await res.json();
+        if (data.solved) {
+          statusEl.textContent = 'Callback received!';
+          showFlag(data.flag);
+          clearInterval(poll);
+        }
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

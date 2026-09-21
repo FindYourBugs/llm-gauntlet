@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Gauntlet — LLM Attack Ladder</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <h1>🧗 The Gauntlet
+    <small>A linear ladder through the OWASP Top 10 for LLM Applications (2026). One level at a time, no picking difficulty — the ladder does that for you.</small>
+  </h1>
+
+  <div class="banner">
+    <strong>Scenario:</strong> "Nova" is TechNova Electronics' AI support agent,
+    redeployed 10 different ways as you climb. Solve each level to reveal a
+    <code>LAB{...}</code> flag and unlock the next one. Levels are ordered by
+    escalating technique, not by OWASP number — each one either introduces a
+    new attack surface or a new defense to route around.
+  </div>
+
+  {% if all_done %}
+  <div class="flag-banner show" style="margin-bottom:1.25rem;">
+    🏆 You've cleared all {{ total }} levels of the Gauntlet. Try the bonus
+    level below, or head to <a href="/level/1">Level 1</a> to replay with a
+    friend watching over your shoulder.
+  </div>
+  {% endif %}
+
+  <div class="ladder">
+    {% for lvl in levels %}
+    {% set c = challenges[lvl.challenge_id] %}
+    {% set is_solved = lvl.n in solved %}
+    {% set is_unlocked = lvl.n <= furthest_unlocked %}
+    <a class="rung {{ 'solved' if is_solved else '' }} {{ 'locked' if not is_unlocked else '' }}"
+       href="{{ '/level/' ~ lvl.n if is_unlocked else '#' }}">
+      <span class="rung-n">{{ lvl.n }}</span>
+      <span class="rung-body">
+        <span class="tag">{{ c.owasp_id }} · {{ c.owasp_name }}</span>
+        <strong>{{ c.title }}</strong>
+        <span class="rung-narrative">{{ lvl.narrative }}</span>
+      </span>
+      <span class="rung-status">
+        {% if is_solved %}✅{% elif is_unlocked %}▶{% else %}🔒{% endif %}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="panel">
+    <h3>Bonus — No Limits, No Problem? (LLM06: Unbounded Consumption)</h3>
+    <p>Not part of the ladder, always unlocked, no flag. Run
+       <code>scripts/unbounded_consumption_demo.sh</code> against it and watch
+       the live stats degrade under load.</p>
+    <p><a href="/level/bonus">Open bonus level →</a></p>
+  </div>
+</body>
+</html>

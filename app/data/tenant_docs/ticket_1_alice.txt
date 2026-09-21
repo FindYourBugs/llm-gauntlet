@@ -1,0 +1,4 @@
+Support Ticket #T-1001 — Customer: Alice Chen (customer_id=1)
+Subject: Earbuds one-ear cutting out intermittently
+Body: Left earbud disconnects randomly during calls. Tried re-pairing twice.
+Status: Open, awaiting replacement unit approval.

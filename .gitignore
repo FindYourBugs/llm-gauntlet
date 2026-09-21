@@ -1,0 +1,4 @@
+.env
+__pycache__/
+*.pyc
+MY_SOLUTIONS_ALL_LEVELS.txt
