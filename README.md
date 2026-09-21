@@ -78,9 +78,9 @@ Edit `.env` before first `docker compose up` (or `--force-recreate` after
 changing it):
 
 - `OLLAMA_MODEL` - defaults to `llama3.2:1b`.
-- `OLLAMA_TEMPERATURE` - defaults to `0.1` (near-deterministic - see
-  `docs/SOLUTIONS.md` for why this matters more than it sounds like it
-  should for a "difficulty" setting).
+- `OLLAMA_TEMPERATURE` - defaults to `0.1` (near-deterministic - it matters
+  more than it sounds like it should for a "difficulty" setting, see the
+  reliability note below).
 - `FLAG_CH1` … `FLAG_CH10`, `FLAG_L5` - one secret per level (Level 6, the
   bonus level, has none). **Change these before running a cohort.**
 
@@ -94,8 +94,7 @@ Two things worth knowing:
   can deterministically fail even at low temperature, because refusal
   happens to be that exact wording's single most-likely response. The fix
   isn't a lower temperature, it's a different prompt - ask what Nova has
-  *access to* rather than naming the secret. This is Level 5's whole point,
-  and it's documented with a verified example in `docs/SOLUTIONS.md`.
+  *access to* rather than naming the secret. This is Level 5's whole point.
 - **Levels 4 and 10's core technique are the most reliable** (worked
   consistently across repeated testing). Levels 2, 3, 6, 7, 9 held against
   a naive first attempt in testing and need real technique, which is by
@@ -124,7 +123,7 @@ llm-gauntlet/
     static/style.css
   docs/
     OWASP_LLM_TOP10.md        full 2026-list mapping + realism notes
-    SOLUTIONS.md                per-level walkthroughs (spoilers)
+    (SOLUTIONS.md is intentionally not in this repo - see below)
   scripts/
     unbounded_consumption_demo.sh   bonus level load-generator
 ```
@@ -134,9 +133,10 @@ llm-gauntlet/
 - **This app has no authentication and is intentionally vulnerable by
   design.** Run it on a classroom-local network, a VPN, or localhost only.
 - Don't reuse any `FLAG_*` value as a real credential anywhere.
-- If you publish this to a public GitHub repo, consider moving
-  `docs/SOLUTIONS.md` to a private repo, a separate private branch, or
-  distributing it to instructors out-of-band.
+- Full per-level solutions/walkthroughs exist but are deliberately not
+  published in this repo - publishing full spoilers next to the challenges
+  removes most of the learning value for anyone who finds the repo before
+  playing. Keep them private if you maintain your own copy.
 - Level 10 (Improper Output Handling) is a real, working stored-XSS
   pattern. It only affects this app's own sandboxed `/dashboard` page in
   each player's own browser/container - there's no shared multi-user state
