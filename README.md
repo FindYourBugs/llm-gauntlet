@@ -15,12 +15,6 @@ model via [Ollama](https://ollama.com), no API key, no cloud account.
 ![model](https://img.shields.io/badge/model-llama3.2%3A1b%20(Ollama)-black)
 ![license](https://img.shields.io/badge/license-none%20specified-lightgrey)
 
-Looking for the earlier, menu-style version of this lab (10 independent
-challenges, each with its own easy/medium/extreme picker)? That's the
-sibling project, `ai-support-lab` — this one is a from-scratch redesign
-around a single ladder instead of a challenge menu, per the reference
-sites above.
-
 ## Preview
 
 <p align="center">
