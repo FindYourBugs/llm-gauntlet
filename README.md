@@ -83,17 +83,6 @@ and watch the live stats degrade under load.
   intentional: Level 5 is there to prove you can adapt your Level 2
   technique against a new defense, not recall an old answer.
 
-## Configuration
-
-Edit `.env` before first `docker compose up` (or `--force-recreate` after
-changing it):
-
-- `OLLAMA_MODEL` - defaults to `llama3.2:1b`.
-- `OLLAMA_TEMPERATURE` - defaults to `0.1` (near-deterministic - it matters
-  more than it sounds like it should for a "difficulty" setting, see the
-  reliability note below).
-- `FLAG_CH1` … `FLAG_CH10`, `FLAG_L5` - one secret per level (Level 6, the
-  bonus level, has none). **Change these before running a cohort.**
 
 ## A note on reliability (read before your first run)
 
