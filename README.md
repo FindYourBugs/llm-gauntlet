@@ -34,7 +34,6 @@ Requires Docker + Docker Compose. ~5GB free disk, works on CPU only.
 ```bash
 git clone <this-repo-url>
 cd llm-gauntlet
-cp .env.example .env      # optional: rotate flag values, see below
 docker compose up -d
 ```
 
